@@ -9,181 +9,138 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 20px;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 /* ヘッダー */
 header {
     text-align: center;
-    margin-bottom: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 30px 20px;
+    background-color: #667eea;
+    color: white;
 }
 
 header h1 {
-    font-size: 2.5em;
-    color: white;
+    font-size: 2em;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 header p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1.1em;
+    font-size: 1em;
+    opacity: 0.9;
 }
 
 /* メインコンテンツ */
 main {
-    flex: 1;
+    padding: 30px;
 }
 
-.update-section {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.update-btn {
-    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+/* 更新ボタン */
+.refresh-btn {
+    display: block;
+    width: 200px;
+    margin: 0 auto 30px auto;
+    background-color: #667eea;
     color: white;
     border: none;
-    padding: 15px 30px;
-    font-size: 1.1em;
-    border-radius: 50px;
+    padding: 12px 24px;
+    font-size: 1em;
+    border-radius: 5px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    font-weight: bold;
+    transition: background-color 0.3s ease;
 }
 
-.update-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+.refresh-btn:hover {
+    background-color: #5a67d8;
 }
 
-.update-btn:active {
-    transform: translateY(0);
-}
-
-.update-btn:disabled {
-    opacity: 0.7;
+.refresh-btn:disabled {
+    background-color: #a0aec0;
     cursor: not-allowed;
-    transform: none;
 }
 
-/* ニュースコンテナ */
-.news-container {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
+/* ニュースリスト */
+.news-list {
+    list-style: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+}
+
+.news-list li {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.news-list li:last-child {
+    border-bottom: none;
 }
 
 .welcome-message {
     text-align: center;
     color: #666;
-    font-size: 1.1em;
-    padding: 40px 20px;
+    font-style: italic;
 }
 
 /* ニュースアイテム */
-.news-item {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-left: 5px solid #667eea;
-}
-
-.news-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.news-item:last-child {
-    margin-bottom: 0;
-}
-
 .news-title {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: bold;
     margin-bottom: 10px;
-    line-height: 1.4;
 }
 
 .news-title a {
     color: #333;
     text-decoration: none;
-    transition: color 0.3s ease;
 }
 
 .news-title a:hover {
     color: #667eea;
+    text-decoration: underline;
 }
 
 .news-description {
     color: #666;
-    margin-bottom: 15px;
-    line-height: 1.6;
-}
-
-.news-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    color: #999;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+    margin-bottom: 10px;
+    line-height: 1.5;
 }
 
 .news-date {
+    font-size: 0.9em;
+    color: #999;
     font-weight: 500;
-}
-
-.news-source {
-    background: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 15px;
-    font-size: 0.8em;
 }
 
 /* エラーメッセージ */
 .error-message {
-    background: #ffebee;
-    color: #c62828;
-    padding: 20px;
-    border-radius: 10px;
+    background-color: #fed7d7;
+    color: #c53030;
+    padding: 15px;
+    border-radius: 5px;
     margin-bottom: 20px;
-    border-left: 5px solid #c62828;
-    box-shadow: 0 2px 10px rgba(198, 40, 40, 0.1);
+    border-left: 4px solid #c53030;
 }
 
 /* フッター */
 footer {
     text-align: center;
-    margin-top: 40px;
     padding: 20px;
-    color: rgba(255, 255, 255, 0.7);
+    background-color: #f7fafc;
+    color: #666;
+    border-top: 1px solid #e2e8f0;
 }
 
 footer a {
-    color: rgba(255, 255, 255, 0.9);
+    color: #667eea;
     text-decoration: none;
 }
 
@@ -200,53 +157,4 @@ footer a:hover {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
-}
-
-/* レスポンシブデザイン */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    
-    header {
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    header h1 {
-        font-size: 2em;
-    }
-    
-    .news-container {
-        padding: 20px;
-    }
-    
-    .news-item {
-        padding: 20px;
-    }
-    
-    .news-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    header h1 {
-        font-size: 1.8em;
-    }
-    
-    .update-btn {
-        padding: 12px 25px;
-        font-size: 1em;
-    }
-    
-    .news-item {
-        padding: 15px;
-    }
-    
-    .news-title {
-        font-size: 1.1em;
-    }
 } 

@@ -3,15 +3,15 @@ const API_KEY = 'ffe3f921a4cc4d769e8efa691a5d1523';
 const API_URL = 'https://newsapi.org/v2/everything';
 
 // DOM要素の取得
-const updateBtn = document.getElementById('updateBtn');
-const newsContainer = document.getElementById('newsContainer');
+const refreshBtn = document.getElementById('refresh-btn');
+const newsList = document.getElementById('news-list');
 const errorMessage = document.getElementById('errorMessage');
 const btnText = document.querySelector('.btn-text');
 const loadingSpinner = document.querySelector('.loading-spinner');
 
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
-    updateBtn.addEventListener('click', fetchNews);
+    refreshBtn.addEventListener('click', fetchNews);
 });
 
 // ニュース取得関数
@@ -62,18 +62,17 @@ async function fetchNews() {
 // ニュース表示関数
 function displayNews(articles) {
     // 既存のコンテンツをクリア
-    newsContainer.innerHTML = '';
+    newsList.innerHTML = '';
     
     articles.forEach(article => {
         const newsItem = createNewsItem(article);
-        newsContainer.appendChild(newsItem);
+        newsList.appendChild(newsItem);
     });
 }
 
 // 個別ニュースアイテム作成
 function createNewsItem(article) {
-    const newsItem = document.createElement('div');
-    newsItem.className = 'news-item';
+    const newsItem = document.createElement('li');
     
     // タイトル
     const title = document.createElement('div');
@@ -90,27 +89,15 @@ function createNewsItem(article) {
     description.className = 'news-description';
     description.textContent = article.description || '概要が利用できません';
     
-    // メタ情報
-    const meta = document.createElement('div');
-    meta.className = 'news-meta';
-    
     // 公開日
     const date = document.createElement('div');
     date.className = 'news-date';
     date.textContent = formatDate(article.publishedAt);
     
-    // ソース
-    const source = document.createElement('div');
-    source.className = 'news-source';
-    source.textContent = article.source?.name || '不明なソース';
-    
-    meta.appendChild(date);
-    meta.appendChild(source);
-    
     // 要素を組み立て
     newsItem.appendChild(title);
     newsItem.appendChild(description);
-    newsItem.appendChild(meta);
+    newsItem.appendChild(date);
     
     return newsItem;
 }
@@ -153,7 +140,7 @@ function formatDate(dateString) {
 
 // ローディング状態の設定
 function setLoadingState(isLoading) {
-    updateBtn.disabled = isLoading;
+    refreshBtn.disabled = isLoading;
     
     if (isLoading) {
         btnText.style.display = 'none';
@@ -166,14 +153,12 @@ function setLoadingState(isLoading) {
 
 // エラー表示
 function showError(message) {
-    errorMessage.textContent = `エラー: ${message}`;
+    errorMessage.textContent = 'ニュースの取得に失敗しました';
     errorMessage.style.display = 'block';
     
     // 既存のニュースコンテンツをクリア
-    newsContainer.innerHTML = `
-        <div class="welcome-message">
-            <p>ニュースの取得に失敗しました。しばらくしてから再度お試しください。</p>
-        </div>
+    newsList.innerHTML = `
+        <li class="welcome-message">ニュースの取得に失敗しました。しばらくしてから再度お試しください。</li>
     `;
 }
 
@@ -189,7 +174,7 @@ window.addEventListener('unhandledrejection', function(event) {
 });
 
 // キーボードアクセシビリティ
-updateBtn.addEventListener('keydown', function(event) {
+refreshBtn.addEventListener('keydown', function(event) {
     if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         fetchNews();
