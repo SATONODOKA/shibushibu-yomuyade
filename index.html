@@ -8,29 +8,10 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🤖 AIニュース</h1>
-            <p>最新のAI関連ニュースをお届けします</p>
-        </header>
-
-        <main>
-            <button id="refresh-btn" class="refresh-btn">
-                <span class="btn-text">🔄 ニュースを更新</span>
-                <span class="loading-spinner" style="display: none;">⏳ 読み込み中...</span>
-            </button>
-
-            <ul id="news-list" class="news-list">
-                <li class="welcome-message">「ニュースを更新」ボタンを押して、最新のAI関連ニュースを取得してください。</li>
-            </ul>
-
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
-        </main>
-
-        <footer>
-            <p>Powered by <a href="https://newsapi.org" target="_blank">NewsAPI</a></p>
-        </footer>
+        <h1>🤖 AIニュース</h1>
+        <button id="refresh-btn">🔄 ニュースを更新</button>
+        <ul id="news-list"></ul>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html> 
