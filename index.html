@@ -9,8 +9,26 @@
 <body>
     <div class="container">
         <h1>🤖 AIニュース</h1>
-        <button id="refresh-btn">🔄 ニュースを更新</button>
+        
+        <!-- Part 4: 拡張されたコントロール -->
+        <div class="controls">
+            <button id="refresh-btn">🔄 ニュースを更新</button>
+            <button id="favorites-btn" onclick="showFavorites()">⭐ お気に入り表示</button>
+        </div>
+        
+        <!-- Part 4: データソース通知エリア -->
+        <!-- showDataSource()で動的に挿入 -->
+        
         <ul id="news-list"></ul>
+        
+        <!-- Part 4: 将来の拡張のための隠し要素 -->
+        <div id="favorites-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeFavorites()">&times;</span>
+                <h2>お気に入り記事</h2>
+                <ul id="favorites-list"></ul>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
