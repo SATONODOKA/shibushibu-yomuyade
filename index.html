@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIニュース更新アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AIニュース</h1>
+            <p>最新のAI関連ニュースをお届けします</p>
+        </header>
+
+        <main>
+            <div class="update-section">
+                <button id="updateBtn" class="update-btn">
+                    <span class="btn-text">🔄 ニュースを更新</span>
+                    <span class="loading-spinner" style="display: none;">⏳ 読み込み中...</span>
+                </button>
+            </div>
+
+            <div id="newsContainer" class="news-container">
+                <div class="welcome-message">
+                    <p>「ニュースを更新」ボタンを押して、最新のAI関連ニュースを取得してください。</p>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </main>
+
+        <footer>
+            <p>Powered by <a href="https://newsapi.org" target="_blank">NewsAPI</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
