@@ -1,24 +1,190 @@
-// Part 4: APIキー管理とNetlify Functions対応
-const API_ENDPOINT = '/.netlify/functions/news';
+// Part 4: APIキー管理とマルチ環境対応
+const API_KEY = "ffe3f921a4cc4d769e8efa691a5d1523";
+const NETLIFY_ENDPOINT = '/.netlify/functions/news';
+const DIRECT_API_ENDPOINT = `https://newsapi.org/v2/everything?q=AI&language=ja&pageSize=5&sortBy=publishedAt&apiKey=${API_KEY}`;
+
+// 環境判定: ローカル環境かNetlify環境かを判断
+function isLocalEnvironment() {
+  return window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1' ||
+         window.location.port !== '';
+}
+
+// ローカル環境用: 複数のCORSプロキシを試行
+async function fetchNewsLocal() {
+  const corsProxies = [
+    { name: 'AllOrigins', url: 'https://api.allorigins.win/get?url=' },
+    { name: 'CORS-Anywhere', url: 'https://cors-anywhere.herokuapp.com/' },
+    { name: 'ThingProxy', url: 'https://thingproxy.freeboard.io/fetch/' }
+  ];
+  
+  // AllOrigins用のエンドポイント変更
+  const allOriginsUrl = corsProxies[0].url + encodeURIComponent(DIRECT_API_ENDPOINT);
+  
+  try {
+    console.log('🔄 AllOriginsプロキシを試行中...');
+    console.log('📍 リクエストURL:', allOriginsUrl);
+    console.log('📍 元のAPIエンドポイント:', DIRECT_API_ENDPOINT);
+    
+    const response = await fetch(allOriginsUrl);
+    console.log('📊 AllOriginsレスポンス状態:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const proxyData = await response.json();
+    console.log('📊 AllOriginsプロキシデータ:', proxyData);
+    
+    if (proxyData.contents) {
+      console.log('🔧 contents を JSON パース中...');
+      const newsData = JSON.parse(proxyData.contents);
+      console.log('📊 パース後のニュースデータ:', newsData);
+      
+      // NewsAPIレスポンスの構造検証
+      if (newsData && newsData.status) {
+        console.log('✅ AllOriginsプロキシ経由で取得成功');
+        return { data: newsData, method: 'AllOrigins' };
+      } else {
+        console.warn('⚠️ NewsAPIレスポンス構造が不正');
+        throw new Error('不正なNewsAPIレスポンス');
+      }
+    } else {
+      console.warn('⚠️ AllOriginsレスポンスに contents がありません');
+      throw new Error('AllOriginsレスポンスにcontentsが含まれていません');
+    }
+  } catch (error) {
+    console.warn('❌ AllOriginsプロキシ失敗:', error);
+    console.warn('❌ エラー詳細:', error.message);
+  }
+  
+  // 他のプロキシを順次試行
+  for (let i = 1; i < corsProxies.length; i++) {
+    try {
+      console.log(`🔄 ${corsProxies[i].name}プロキシを試行中...`);
+      const proxyUrl = corsProxies[i].url + DIRECT_API_ENDPOINT;
+      console.log(`📍 ${corsProxies[i].name} URL:`, proxyUrl);
+      
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      
+      console.log(`📊 ${corsProxies[i].name}レスポンス状態:`, response.status, response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`📊 ${corsProxies[i].name}レスポンスデータ:`, data);
+      
+      // データ構造の検証
+      if (data && data.status) {
+        console.log(`✅ ${corsProxies[i].name}プロキシ経由で取得成功`);
+        return { data: data, method: corsProxies[i].name };
+      } else {
+        throw new Error('不正なNewsAPIレスポンス構造');
+      }
+    } catch (error) {
+      console.warn(`❌ ${corsProxies[i].name}プロキシ失敗:`, error);
+      console.warn(`❌ ${corsProxies[i].name}エラー詳細:`, error.message);
+    }
+  }
+  
+  // 最後の手段：直接APIアクセス試行
+  try {
+    console.log('🔄 直接APIアクセスを試行中...');
+    console.log('📍 直接API URL:', DIRECT_API_ENDPOINT);
+    
+    const response = await fetch(DIRECT_API_ENDPOINT);
+    console.log('📊 直接APIレスポンス状態:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('📊 直接APIレスポンスデータ:', data);
+    
+    // データ構造の検証
+    if (data && data.status) {
+      console.log('✅ 直接APIアクセス成功（CORSが許可されました）');
+      return { data: data, method: '直接API' };
+    } else {
+      throw new Error('不正なNewsAPIレスポンス構造');
+    }
+  } catch (corsError) {
+    console.warn('❌ 直接APIアクセス失敗（CORS問題）:', corsError);
+    console.warn('❌ 直接APIエラー詳細:', corsError.message);
+    throw new Error('すべてのAPI接続方法が失敗しました');
+  }
+}
+
+// Netlify環境用: Netlify Functionsを使用
+async function fetchNewsNetlify() {
+  const response = await fetch(NETLIFY_ENDPOINT);
+  return await response.json();
+}
 
 async function fetchAINews() {
+  console.log('🔄 fetchAINews() 開始');
+  
   try {
-    // Netlify Functionsを使用してCORS問題を解決
-    const res = await fetch(API_ENDPOINT);
-    const data = await res.json();
+    let result;
+    let method = null;
     
-    if (data.status !== "ok") {
-      console.error("API error:", data);
+    if (isLocalEnvironment()) {
+      console.log('🏠 ローカル環境を検出 - 直接NewsAPIにアクセス');
+      const localResult = await fetchNewsLocal();
+      console.log('📊 fetchNewsLocal() の戻り値:', localResult);
+      
+      if (!localResult || !localResult.data) {
+        throw new Error('ローカル環境でのデータ取得に失敗');
+      }
+      
+      method = localResult.method;
+      result = localResult.data; // データ部分を取り出し
+      console.log('📊 取り出したデータ:', result);
+    } else {
+      console.log('🌐 Netlify環境を検出 - Netlify Functionsを使用');
+      result = await fetchNewsNetlify();
+      method = 'Netlify Functions';
+    }
+    
+    if (!result) {
+      console.error('❌ result が null または undefined');
+      showErrorWithFallback("データの取得に失敗しました");
+      return;
+    }
+    
+    if (result.status !== "ok") {
+      console.error("❌ API error:", result);
       showErrorWithFallback("ニュースの取得に失敗しました");
       return;
     }
     
-    // データソース表示
-    showDataSource(data.source);
-    renderNews(data.articles);
+    console.log('📊 APIレスポンス全体:', result);
+    console.log('📊 記事配列:', result.articles);
+    console.log('📊 記事数:', result.articles ? result.articles.length : 'undefined');
+    
+    // データソース表示（成功した取得方法も表示）
+    showDataSource(result.source || 'api', method);
+    
+    // 記事の表示
+    if (result.articles && result.articles.length > 0) {
+      console.log('✅ renderNews() を呼び出し中...');
+      renderNews(result.articles);
+      console.log(`🎉 ニュース取得成功! 記事数: ${result.articles.length}件`);
+    } else {
+      console.warn('⚠️ 記事配列が空または未定義');
+      showErrorWithFallback("取得された記事がありません");
+    }
     
   } catch (error) {
-    console.error("Fetch error:", error);
+    console.error("❌ Fetch error:", error);
+    console.error("❌ Error stack:", error.stack);
     showErrorWithFallback("通信に失敗しました");
   }
 }
@@ -32,36 +198,87 @@ function showErrorWithFallback(message) {
   showDataSource('mock');
 }
 
-// Part 4: 拡張された記事表示機能
+// Part 4: 拡張された記事表示機能（修正版）
 function renderNews(articles) {
+  console.log('🎨 renderNews() 開始');
+  console.log('📊 受信した記事配列:', articles);
+  
   const list = document.getElementById("news-list");
+  if (!list) {
+    console.error('❌ news-list 要素が見つかりません');
+    return;
+  }
+  
+  console.log('🎯 news-list 要素を取得:', list);
   list.innerHTML = "";
   
+  if (!articles || articles.length === 0) {
+    console.warn('⚠️ 記事配列が空です');
+    list.innerHTML = '<li style="text-align: center; color: #999; padding: 20px;">表示する記事がありません</li>';
+    return;
+  }
+  
   articles.forEach((article, index) => {
+    console.log(`🔧 記事 ${index + 1} を処理中:`, article.title);
+    
+    // データの検証とサニタイズ
+    const safeTitle = escapeHtml(article.title || "タイトル不明");
+    const safeUrl = article.url || "#";
+    const safeDescription = escapeHtml(article.description || "概要が利用できません");
+    const safeSourceName = escapeHtml(article.source?.name || "不明");
+    
     const li = document.createElement("li");
     li.className = "news-item";
+    
+    // 安全なHTML構造の構築
     li.innerHTML = `
       <div class="news-header">
-        <a href="${article.url}" target="_blank" class="news-title">
-          ${article.title}
+        <a href="${safeUrl}" target="_blank" class="news-title">
+          ${safeTitle}
         </a>
-        <span class="news-source">${article.source?.name || "不明"}</span>
+        <span class="news-source">${safeSourceName}</span>
       </div>
-      <p class="news-description">${article.description || "概要が利用できません"}</p>
+      <p class="news-description">${safeDescription}</p>
       <div class="news-meta">
         <span class="news-date">${formatDate(article.publishedAt)}</span>
         <div class="news-actions">
-          <button onclick="shareArticle('${article.url}', '${article.title}')" class="share-btn">
+          <button class="share-btn" data-url="${safeUrl}" data-title="${safeTitle}">
             📤 シェア
           </button>
-          <button onclick="toggleFavorite(${index})" class="favorite-btn">
+          <button class="favorite-btn" data-index="${index}">
             ⭐ お気に入り
           </button>
         </div>
       </div>
     `;
+    
+    // イベントリスナーを安全に追加
+    const shareBtn = li.querySelector('.share-btn');
+    const favoriteBtn = li.querySelector('.favorite-btn');
+    
+    shareBtn.addEventListener('click', () => {
+      shareArticle(article.url, article.title);
+    });
+    
+    favoriteBtn.addEventListener('click', () => {
+      toggleFavorite(index);
+    });
+    
     list.appendChild(li);
   });
+  
+  console.log(`✅ renderNews() 完了: ${articles.length}件の記事を表示`);
+}
+
+// HTMLエスケープ関数
+function escapeHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Part 4: 日付フォーマット機能
@@ -95,8 +312,8 @@ function formatDate(dateString) {
   }
 }
 
-// Part 4: データソース表示機能
-function showDataSource(source) {
+// Part 4: データソース表示機能（拡張版）
+function showDataSource(source, method = null) {
   const existingNotice = document.querySelector('.data-source-notice');
   if (existingNotice) {
     existingNotice.remove();
@@ -108,12 +325,23 @@ function showDataSource(source) {
   if (source === 'mock') {
     notice.innerHTML = `
       <span class="source-badge mock">📝 開発モード</span>
-      サンプルデータを表示しています
+      サンプルデータを表示しています（API接続に失敗）
     `;
   } else {
+    const environment = isLocalEnvironment() ? 'ローカル環境' : 'Netlify環境';
+    let methodText = '';
+    
+    if (method) {
+      methodText = ` (${method}経由)`;
+    } else if (isLocalEnvironment()) {
+      methodText = ' (CORSプロキシ経由)';
+    } else {
+      methodText = ' (Netlify Functions経由)';
+    }
+    
     notice.innerHTML = `
-      <span class="source-badge api">📡 Live</span>
-      NewsAPIから最新データを取得
+      <span class="source-badge api">📡 Live API</span>
+      NewsAPIから最新データを取得 - ${environment}${methodText}
     `;
   }
   
@@ -242,15 +470,29 @@ function removeFavorite(index) {
 
 // Part 4: 初期化とイベントリスナー
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('🚀 DOMContentLoaded - アプリケーション初期化開始');
+  
   // ボタンイベント設定
-  document.getElementById("refresh-btn").addEventListener("click", fetchAINews);
+  const refreshBtn = document.getElementById("refresh-btn");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", fetchAINews);
+    console.log('✅ 更新ボタンにイベントリスナーを設定');
+  } else {
+    console.error('❌ refresh-btn 要素が見つかりません');
+  }
   
   // モーダルの外側クリックで閉じる
-  document.getElementById('favorites-modal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) {
-      closeFavorites();
-    }
-  });
+  const modal = document.getElementById('favorites-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeFavorites();
+      }
+    });
+    console.log('✅ モーダルにイベントリスナーを設定');
+  } else {
+    console.error('❌ favorites-modal 要素が見つかりません');
+  }
   
   // ESCキーでモーダルを閉じる
   document.addEventListener('keydown', (e) => {
@@ -259,6 +501,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
+  // 環境情報表示
+  console.log('🌍 環境情報:');
+  console.log('  - ホスト名:', window.location.hostname);
+  console.log('  - ポート:', window.location.port);
+  console.log('  - ローカル環境:', isLocalEnvironment());
+  console.log('  - APIキー:', API_KEY ? `${API_KEY.substring(0, 8)}...` : 'undefined');
+  
   // 初回読み込み時にニュースを取得
+  console.log('🔄 初回ニュース取得を開始...');
   fetchAINews();
 }); 
